@@ -163,7 +163,7 @@ struct EffectsSheet: View {
                 .contentShape(shape)
         }
         .buttonStyle(.plain)
-        .help(kind.rawValue + " color")
+        .help(zh(kind.rawValue + " color"))
         .accessibilityLabel(kind.rawValue + " color")
     }
 
@@ -175,7 +175,7 @@ struct EffectsSheet: View {
             value.wrappedValue = min(limits.upperBound, max(limits.lowerBound, CGFloat(amount)))
         }
         return HStack(spacing: 10) {
-            Text(title).frame(width: 64, alignment: .leading)
+            Text(zh(title)).frame(width: 64, alignment: .leading)
                 .scrubbable(sensitivity: 1, value: value, range: limits)
             // A manually entered larger value stays intact; only the thumb is pinned
             // to the end of the slider until the user drags it again.

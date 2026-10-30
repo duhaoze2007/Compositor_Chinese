@@ -1,7 +1,8 @@
 name: 构建中文版
 
-# 构建中文版 Compositor，并把 .app 压缩包挂到 Release（标签 zh-latest，预发布），
-# 供任何人直接下载安装：https://github.com/duhaoze2007/Compositor_Chinese/releases
+# 构建中文版 Compositor（Release），并把 .app 压缩包挂到 Release（标签 zh-latest，预发布），
+# 任何人都能直接下载安装：https://github.com/duhaoze2007/Compositor_Chinese/releases
+# 构建失败时，xcodebuild 日志会作为 zh-latest 的资源一起上传，方便排查。
 on:
   push:
     branches: [main]
@@ -39,49 +40,69 @@ jobs:
           -onlyUsePackageVersionsFromResolvedFile
 
       - name: 构建 Release
-        run: >
-          xcodebuild build
-          -project Compositor.xcodeproj
-          -scheme Compositor
-          -configuration Release
-          -destination 'platform=macOS,arch=arm64'
-          -derivedDataPath DerivedData
-          CODE_SIGN_IDENTITY=-
-          CODE_SIGN_STYLE=Automatic
-          DEVELOPMENT_TEAM=
-          ONLY_ACTIVE_ARCH=YES
+        id: build
+        continue-on-error: true
+        run: |
+          set -o pipefail
+          xcodebuild build \
+            -project Compositor.xcodeproj \
+            -scheme Compositor \
+            -configuration Release \
+            -destination 'platform=macOS,arch=arm64' \
+            -derivedDataPath DerivedData \
+            CODE_SIGN_IDENTITY=- \
+            CODE_SIGN_STYLE=Automatic \
+            DEVELOPMENT_TEAM= \
+            ONLY_ACTIVE_ARCH=YES 2>&1 | tee build.log | tail -200
 
       - name: 检查中文资源
+        if: steps.build.outcome == 'success'
         run: |
           APP="DerivedData/Build/Products/Release/Compositor.app"
           test -d "$APP" || { echo "没有生成 $APP"; exit 1; }
-          ls -la "$APP/Contents/Resources" | head -30
-          test -f "$APP/Contents/Resources/zh-Hans.lproj/Localizable.strings" || { echo "缺少中文本地化资源"; exit 1; }
+          ls -la "$APP/Contents/Resources"
+          test -f "$APP/Contents/Resources/zh-Hans.lproj/Localizable.strings" || { echo "缺少 Localizable.strings"; exit 1; }
+          test -f "$APP/Contents/Resources/zh-Hans.lproj/InfoPlist.strings" || { echo "缺少 InfoPlist.strings"; exit 1; }
           /usr/libexec/PlistBuddy -c "Print :CFBundleDevelopmentRegion" "$APP/Contents/Info.plist"
+          grep -c '";' "$APP/Contents/Resources/zh-Hans.lproj/Localizable.strings"
 
-      - name: 压缩并发布
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: 打包
+        if: steps.build.outcome == 'success'
         run: |
           set -euo pipefail
           APP="DerivedData/Build/Products/Release/Compositor.app"
           VERSION=$(/usr/libexec/PlistBuddy -c "Print :CFBundleShortVersionString" "$APP/Contents/Info.plist")
           BUILD=$(/usr/libexec/PlistBuddy -c "Print :CFBundleVersion" "$APP/Contents/Info.plist")
-          NAME="Compositor-${VERSION}-zh.${BUILD}.zip"
-          ditto -c -k --sequesterRsrc --keepParent "$APP" "$NAME"
-          # 早于本工作流创建的 Release 不是这个流程的，别去改它
+          ditto -c -k --sequesterRsrc --keepParent "$APP" "Compositor-${VERSION}-zh.${BUILD}.zip"
+          ls -la *.zip
+
+      - name: 发布到 Release
+        if: always()
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
           gh release view zh-latest >/dev/null 2>&1 || \
             gh release create zh-latest --prerelease \
-              --title "Compositor 中文版（最新构建）" \
-              --notes "本标签下的 Compositor 中文版由 GitHub Actions 自动构建，每次推送 main 都会更新。正式说明见仓库根目录的 RELEASE_NOTES.md。"
-          gh release upload zh-latest "$NAME" --clobber
-          echo "已上传 $NAME"
+              --title "Compositor 中文版（自动构建）" \
+              --notes "本标签下的 Compositor 中文版由 GitHub Actions 自动构建，每次推送 main 都会更新。说明见仓库根目录的 RELEASE_NOTES.md。"
+          if ls *.zip >/dev/null 2>&1; then
+            gh release upload zh-latest *.zip --clobber
+          fi
+          # 构建失败时也要能看到日志
+          if [ "${{ steps.build.outcome }}" != "success" ]; then
+            gh release upload zh-latest build.log --clobber || true
+            echo "构建失败，日志已上传"
+            exit 1
+          fi
 
       - name: 保留构建产物（7 天）
         if: always()
         uses: actions/upload-artifact@v7
         with:
           name: Compositor-zh-app
-          path: '*.zip'
+          path: |
+            *.zip
+            build.log
           retention-days: 7
           if-no-files-found: warn

@@ -1,0 +1,3 @@
+/* 应用名（菜单栏、关于窗口、访达显示名） */
+"CFBundleName" = "Compositor 中文版";
+"CFBundleDisplayName" = "Compositor 中文版";

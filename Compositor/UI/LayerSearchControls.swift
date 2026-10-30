@@ -120,7 +120,7 @@ struct LayersHeader: View {
                 searching.toggle()
             } label: { headerIcon(searching ? "xmark" : "magnifyingglass") }
                 .buttonStyle(.plain)
-                .help(searching ? "Close the search" : "Search layers by name")
+                .help(zh(searching ? "Close the search" : "Search layers by name"))
                 .accessibilityLabel(searching ? "Close search" : "Search layers")
                 .accessibilityIdentifier("layerSearchButton")
             Button { isPresentingFilter.toggle() } label: {

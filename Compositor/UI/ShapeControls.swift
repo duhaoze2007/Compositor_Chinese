@@ -10,7 +10,7 @@ struct ShapeControls: View {
                 session.cancelShape()
                 session.shapeKind = kind
             })) {
-                ForEach(ShapeKind.allCases, id: \.self) { Text($0.rawValue).tag($0) }
+                ForEach(ShapeKind.allCases, id: \.self) { Text(zh($0.rawValue)).tag($0) }
             }
             .pickerStyle(.segmented).labelsHidden().fixedSize()
             .help("Shift-U (or Tab) steps through Rectangle, Ellipse and Line")
@@ -52,7 +52,7 @@ struct ShapeControls: View {
                     Text("Cap")
                     Picker("Cap", selection: $session.shapeLineCap) {
                         ForEach(ShapeLineCap.allCases, id: \.self) { cap in
-                            Label { Text(cap.rawValue) } icon: { Image(nsImage: LineSample.cap(cap)) }.tag(cap)
+                            Label { Text(zh(cap.rawValue)) } icon: { Image(nsImage: LineSample.cap(cap)) }.tag(cap)
                         }
                     }
                     .pickerStyle(.menu).labelsHidden().fixedSize()
@@ -78,9 +78,9 @@ struct ShapeControls: View {
                     .toggleStyle(.checkbox)
                     .fixedSize()
                     .disabled(session.shapeCornerRadius <= 0)
-                    .help(session.shapeCornerRadius <= 0
+                    .help(zh(session.shapeCornerRadius <= 0
                           ? "Set a radius above 0 to use smooth corners."
-                          : "Use smooth squircle corners at 60% smoothing, matching Figma's iOS setting")
+                          : "Use smooth squircle corners at 60% smoothing, matching Figma's iOS setting"))
             }
             Spacer(minLength: 0)
         }

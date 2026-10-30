@@ -276,10 +276,10 @@ private struct KeyboardShortcutsSheet: View {
             ScrollView {
                 LazyVStack(alignment: .leading, spacing: 6) {
                     ForEach(["Menus", "Canvas & Layers", "Text Editing"], id: \.self) { group in
-                        Text(group).font(.headline).padding(.top, 8)
+                        Text(zh(group)).font(.headline).padding(.top, 8)
                         ForEach(ShortcutDefinition.all.filter { $0.group == group && (search.isEmpty || $0.title.localizedCaseInsensitiveContains(search)) }) { definition in
                             HStack {
-                                Text(definition.title)
+                                Text(zh(definition.title))
                                 Spacer()
                                 ShortcutRecorder(chord: draft[definition.id] ?? definition.original,
                                     recording: recording == definition.id,
@@ -311,7 +311,7 @@ private struct KeyboardShortcutsSheet: View {
             }.frame(height: 465)
             // Only a conflict takes room here; an empty line left a wide gap above the buttons.
             if let problem = ShortcutSettings.problem(in: draft) {
-                Text(problem)
+                Text(zh(problem))
                     .foregroundStyle(.orange).font(.callout).lineLimit(2)
                     .frame(height: 22, alignment: .topLeading)
             }

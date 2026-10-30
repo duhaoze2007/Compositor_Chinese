@@ -17,7 +17,7 @@ extension View {
     func unitSuffix(_ unit: String, spacing: CGFloat = 2) -> some View {
         HStack(spacing: spacing) {
             self
-            Text(unit)
+            Text(zh(unit))
         }
     }
 
@@ -27,7 +27,7 @@ extension View {
                                                 spacing: CGFloat = 2) -> some View {
         HStack(spacing: spacing) {
             self
-            Text(unit).scrubbable(sensitivity: sensitivity, value: scrubValue, range: range, step: step)
+            Text(zh(unit)).scrubbable(sensitivity: sensitivity, value: scrubValue, range: range, step: step)
         }
     }
 
@@ -35,7 +35,7 @@ extension View {
                     range: ClosedRange<Int>) -> some View {
         HStack(spacing: 2) {
             self
-            Text(unit).scrubbable(sensitivity: sensitivity, value: scrubValue, range: range)
+            Text(zh(unit)).scrubbable(sensitivity: sensitivity, value: scrubValue, range: range)
         }
     }
 
