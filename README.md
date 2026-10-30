@@ -5,6 +5,8 @@ Compositor 是一款免费开源的 macOS 图像编辑器，用来做合成与�
 
 只做汉化：界面文案全部来自 `Compositor/Resources/zh-Hans.lproj/Localizable.strings`，没有改动任何编辑、渲染、文件格式相关的逻辑。
 
+![主界面](docs/screenshots/shot-main.png)
+
 ## 下载安装
 
 1. 打开 [Releases](https://github.com/duhaoze2007/Compositor_Chinese/releases)，下载最新的 `Compositor-<版本>-zh.<构建号>.zip`。

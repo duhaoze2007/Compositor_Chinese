@@ -5,10 +5,14 @@
 
 ---
 
+![主界面](https://github.com/duhaoze2007/Compositor_Chinese/raw/v1.5.12-zh.1/docs/screenshots/shot-main.png)
+
 ## 这一版做了什么
 
 把 Compositor 的整套界面翻译成了简体中文，共 **1586 条文案**，覆盖菜单栏、工具、面板、对话框、
 提示与错误信息。除文案外没有改动任何功能。
+
+![键盘快捷键](https://github.com/duhaoze2007/Compositor_Chinese/raw/v1.5.12-zh.1/docs/screenshots/shot-shortcuts.png)
 
 ### 汉化范围
 

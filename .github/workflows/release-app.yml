@@ -118,12 +118,12 @@ jobs:
                 --title "Compositor 中文版（自动构建）" \
                 --notes "本标签下的 Compositor 中文版由 GitHub Actions 自动构建，每次推送 main 都会更新。正式说明见 RELEASE_NOTES.md。"
           fi
-          if ls *.zip >/dev/null 2>&1; then
+          if [ "${{ steps.build.outcome }}" == "success" ]; then
             gh release upload "$TAG" *.zip --clobber
-          fi
-          # 日志始终上传，方便核对打进去的中文资源
-          gh release upload "$TAG" build.log --clobber || true
-          if [ "${{ steps.build.outcome }}" != "success" ]; then
+            # 只保留安装包，清掉以前失败时留下的日志
+            gh release delete-asset "$TAG" build.log --yes || true
+          else
+            gh release upload "$TAG" build.log --clobber || true
             echo "构建失败，日志已上传到 $TAG"
             exit 1
           fi
