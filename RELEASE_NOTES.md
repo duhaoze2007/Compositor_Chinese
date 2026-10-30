@@ -7,7 +7,7 @@
 
 ## 这一版做了什么
 
-把 Compositor 的整套界面翻译成了简体中文，共 **1580 条文案**，覆盖菜单栏、工具、面板、对话框、
+把 Compositor 的整套界面翻译成了简体中文，共 **1586 条文案**，覆盖菜单栏、工具、面板、对话框、
 提示与错误信息。除文案外没有改动任何功能。
 
 ### 汉化范围
@@ -77,7 +77,7 @@ xcodebuild -project Compositor.xcodeproj -scheme Compositor -configuration Relea
 
 | 项目 | 结果 |
 | --- | --- |
-| 文案条目 | 1580 |
+| 文案条目 | 1586 |
 | `plutil -lint` | OK |
 | 界面文案来源 | `Compositor/Resources/zh-Hans.lproj/Localizable.strings` |
 | 应用包内路径 | `Compositor.app/Contents/Resources/zh-Hans.lproj/` |

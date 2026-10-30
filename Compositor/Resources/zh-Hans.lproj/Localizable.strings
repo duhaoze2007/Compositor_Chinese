@@ -778,7 +778,7 @@
 "Lifts or lowers the dark tones." = "提高或降低暗色调。";
 "Lifts or lowers the darkest tones." = "提高或降低最暗的色调。";
 "Lifts or lowers the light tones." = "提高或降低亮色调。";
-"Light" = "浅色";
+"Light" = "光线";
 "Light blooming around the lines, like a CRT's phosphors" = "线条周围的光晕，如同 CRT 荧光粉的发光";
 "Light Blue" = "浅蓝色";
 "Light gathered at each disc's rim, as some lenses draw it" = "汇聚在每个圆盘边缘的光，一如某些镜头的成像";
@@ -1592,3 +1592,7 @@
 "White canvas" = "白色画布";
 "Black canvas" = "黑色画布";
 "%lld DPI" = "%lld DPI";
+
+/* ——— 单位 ——— */
+"pixels" = "像素";
+"pixels/inch" = "像素/英寸";

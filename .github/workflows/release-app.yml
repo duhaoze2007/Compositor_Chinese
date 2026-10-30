@@ -57,7 +57,14 @@ jobs:
         run: |
           APP="DerivedData/Build/Products/Release/Compositor.app"
           test -d "$APP" || { echo "没有生成 $APP"; exit 1; }
-          ls -la "$APP/Contents/Resources"
+          # 兜底：如果 Xcode 没有把 .lproj 打进包里（工程 knownRegions 之外的情况），就直接补进去
+          if [ ! -f "$APP/Contents/Resources/zh-Hans.lproj/Localizable.strings" ]; then
+            echo "构建产物里没有 zh-Hans.lproj，补入源码里的中文资源"
+            mkdir -p "$APP/Contents/Resources/zh-Hans.lproj"
+            cp Compositor/Resources/zh-Hans.lproj/*.strings "$APP/Contents/Resources/zh-Hans.lproj/"
+          fi
+          codesign --force --deep --sign - "$APP"
+          ls -la "$APP/Contents/Resources" | tee -a build.log
           test -f "$APP/Contents/Resources/zh-Hans.lproj/Localizable.strings" || { echo "缺少 Localizable.strings"; exit 1; }
           test -f "$APP/Contents/Resources/zh-Hans.lproj/InfoPlist.strings" || { echo "缺少 InfoPlist.strings"; exit 1; }
           /usr/libexec/PlistBuddy -c "Print :CFBundleDevelopmentRegion" "$APP/Contents/Info.plist"
@@ -99,8 +106,9 @@ jobs:
           if ls *.zip >/dev/null 2>&1; then
             gh release upload "$TAG" *.zip --clobber
           fi
+          # 日志始终上传，方便核对打进去的中文资源
+          gh release upload "$TAG" build.log --clobber || true
           if [ "${{ steps.build.outcome }}" != "success" ]; then
-            gh release upload "$TAG" build.log --clobber || true
             echo "构建失败，日志已上传到 $TAG"
             exit 1
           fi
