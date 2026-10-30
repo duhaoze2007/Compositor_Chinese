@@ -62,7 +62,7 @@ struct BlendModePicker: NSViewRepresentable {
             // AppKit briefly reports no highlighted item while dismissing the menu.
             // Keep the last preview alive until the selection action has committed so
             // the canvas never flashes back to the layer's previous mode.
-            guard let mode = Self.mode(of: item) else { return }
+            guard let mode = BlendModePicker.mode(of: item) else { return }
             highlightedMode = mode
             session.previewBlendMode(mode, for: layerID)
         }
@@ -78,7 +78,7 @@ struct BlendModePicker: NSViewRepresentable {
         }
         @objc func choose(_ button: NSPopUpButton) {
             guard session.activeLayerID == layerID,
-                  let mode = highlightedMode ?? Self.mode(of: button.selectedItem) else { return }
+                  let mode = highlightedMode ?? BlendModePicker.mode(of: button.selectedItem) else { return }
             session.setLayerBlendMode(mode)
             button.selectItem(withTitle: zhString(mode.rawValue))
             highlightedMode = nil
