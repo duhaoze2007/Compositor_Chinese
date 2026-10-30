@@ -67,7 +67,7 @@ xcodebuild -project Compositor.xcodeproj -scheme Compositor -configuration Relea
 * 汉化以 `Localizable.strings` 为唯一文案来源，键是英文原文，值是简体中文。
 * 新增 `Compositor/UI/LocalizedText.swift`，提供泛型函数 `zh()`，把模型层的 `String`
   （枚举名、状态标题、提示语）接入 SwiftUI 的本地化查表；查不到就原样显示英文，行为与英文版一致。
-* 源码改动共 190 处，全部是「把值包进 `zh(…)`」，没有改任何逻辑、算法、文件格式或快捷键。
+* 源码改动共 189 处 `zh(…)` 包装（另有浮动面板标题一处），没有改任何逻辑、算法、文件格式或快捷键。
 * `Config/Info.plist` 声明 `CFBundleDevelopmentRegion = zh-Hans`、`CFBundleLocalizations = [zh-Hans]`，
   这样在英文系统上也会显示中文。
 * GitHub Actions 自动构建：每次推送 `main` 都会生成 `Compositor-<版本>-zh.<构建号>.zip`

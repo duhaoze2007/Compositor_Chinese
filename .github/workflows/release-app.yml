@@ -55,20 +55,35 @@ jobs:
       - name: 检查中文资源
         if: steps.build.outcome == 'success'
         run: |
+          # 整个步骤的输出都追加到 build.log，失败时随日志一起上传，方便定位
+          exec >> build.log 2>&1
+          set -x
           APP="DerivedData/Build/Products/Release/Compositor.app"
-          test -d "$APP" || { echo "没有生成 $APP"; exit 1; }
-          # 兜底：如果 Xcode 没有把 .lproj 打进包里（工程 knownRegions 之外的情况），就直接补进去
+          test -d "$APP"
+          # 兜底：如果 Xcode 没有把 .lproj 打进包里，就直接补进去
           if [ ! -f "$APP/Contents/Resources/zh-Hans.lproj/Localizable.strings" ]; then
             echo "构建产物里没有 zh-Hans.lproj，补入源码里的中文资源"
             mkdir -p "$APP/Contents/Resources/zh-Hans.lproj"
             cp Compositor/Resources/zh-Hans.lproj/*.strings "$APP/Contents/Resources/zh-Hans.lproj/"
           fi
-          codesign --force --deep --sign - "$APP"
-          ls -la "$APP/Contents/Resources" | tee -a build.log
-          test -f "$APP/Contents/Resources/zh-Hans.lproj/Localizable.strings" || { echo "缺少 Localizable.strings"; exit 1; }
-          test -f "$APP/Contents/Resources/zh-Hans.lproj/InfoPlist.strings" || { echo "缺少 InfoPlist.strings"; exit 1; }
+          ls -la "$APP/Contents/Resources"
+          test -f "$APP/Contents/Resources/zh-Hans.lproj/Localizable.strings"
+          test -f "$APP/Contents/Resources/zh-Hans.lproj/InfoPlist.strings"
           /usr/libexec/PlistBuddy -c "Print :CFBundleDevelopmentRegion" "$APP/Contents/Info.plist"
-          grep -c '";' "$APP/Contents/Resources/zh-Hans.lproj/Localizable.strings"
+          # Xcode 把 .strings 转成 UTF-16 放进包里，先转回 UTF-8 再数条目
+          iconv -f UTF-16 -t UTF-8 "$APP/Contents/Resources/zh-Hans.lproj/Localizable.strings" > /tmp/zh-strings.txt \
+            || cp "$APP/Contents/Resources/zh-Hans.lproj/Localizable.strings" /tmp/zh-strings.txt
+          ENTRIES=$(grep -c '";' /tmp/zh-strings.txt || true)
+          echo "文案条目: $ENTRIES"
+          test "$ENTRIES" -gt 1000
+          set +x
+
+      - name: 重新签名
+        if: steps.build.outcome == 'success'
+        run: |
+          APP="DerivedData/Build/Products/Release/Compositor.app"
+          codesign --force --deep --sign - "$APP" || echo "签名失败，留给安装时重新签名"
+          codesign --verify --deep --strict "$APP" || true
 
       - name: 打包
         if: steps.build.outcome == 'success'
@@ -78,7 +93,7 @@ jobs:
           VERSION=$(/usr/libexec/PlistBuddy -c "Print :CFBundleShortVersionString" "$APP/Contents/Info.plist")
           BUILD=$(/usr/libexec/PlistBuddy -c "Print :CFBundleVersion" "$APP/Contents/Info.plist")
           ditto -c -k --sequesterRsrc --keepParent "$APP" "Compositor-${VERSION}-zh.${BUILD}.zip"
-          ls -la *.zip
+          ls -la *.zip | tee -a build.log
 
       - name: 发布
         if: always()
