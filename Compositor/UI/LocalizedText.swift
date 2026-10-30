@@ -17,6 +17,11 @@ func zh<T>(_ value: T) -> LocalizedStringKey {
     return LocalizedStringKey(described == "nil" ? "" : described)
 }
 
+/// AppKit 侧的文案（浮动面板标题、窗口标题等）不是 SwiftUI 的 `Text`，走这个查表取中文，查不到返回原文。
+func zhString(_ key: String) -> String {
+    Bundle.main.localizedString(forKey: key, value: key, table: nil)
+}
+
 extension String {
     /// 字符串版本，便于拼接后再本地化：`("Last Filter: " + filter.rawValue).zh`。
     var zh: LocalizedStringKey { LocalizedStringKey(self) }

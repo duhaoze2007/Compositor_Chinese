@@ -1586,3 +1586,9 @@
 "Show Layers" = "显示图层";
 "Tonal Contrast…" = "色调对比…";
 "Vignette…" = "晕影…";
+
+/* ——— 新建画布的三种底色 ——— */
+"Transparent canvas" = "透明画布";
+"White canvas" = "白色画布";
+"Black canvas" = "黑色画布";
+"%lld DPI" = "%lld DPI";
