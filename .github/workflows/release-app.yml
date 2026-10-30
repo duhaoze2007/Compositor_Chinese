@@ -1,16 +1,13 @@
 name: 构建中文版
 
-# 构建中文版 Compositor（Release），并把 .app 压缩包挂到 Release（标签 zh-latest，预发布），
-# 任何人都能直接下载安装：https://github.com/duhaoze2007/Compositor_Chinese/releases
-# 构建失败时，xcodebuild 日志会作为 zh-latest 的资源一起上传，方便排查。
+# 构建中文版 Compositor（Release），并把 .app 压缩包挂到 Release：
+#   · 推送 main      → 更新预发布标签 zh-latest（最新构建）
+#   · 推送 v* 标签   → 用 RELEASE_NOTES.md 建正式 Release，并附上 .app
+# 构建失败时，xcodebuild 日志会作为该 Release 的资源一起上传，方便排查。
 on:
   push:
     branches: [main]
-    paths:
-      - 'Compositor/**'
-      - 'Config/**'
-      - 'Compositor.xcodeproj/**'
-      - '.github/workflows/release-app.yml'
+    tags: ['v*']
   workflow_dispatch:
 
 permissions:
@@ -76,23 +73,35 @@ jobs:
           ditto -c -k --sequesterRsrc --keepParent "$APP" "Compositor-${VERSION}-zh.${BUILD}.zip"
           ls -la *.zip
 
-      - name: 发布到 Release
+      - name: 发布
         if: always()
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           set -euo pipefail
-          gh release view zh-latest >/dev/null 2>&1 || \
-            gh release create zh-latest --prerelease \
-              --title "Compositor 中文版（自动构建）" \
-              --notes "本标签下的 Compositor 中文版由 GitHub Actions 自动构建，每次推送 main 都会更新。说明见仓库根目录的 RELEASE_NOTES.md。"
-          if ls *.zip >/dev/null 2>&1; then
-            gh release upload zh-latest *.zip --clobber
+          if [ "$GITHUB_REF_TYPE" = "tag" ]; then
+            # 正式版本：用仓库里的发布说明建 Release
+            TAG="$GITHUB_REF_NAME"
+            TITLE="Compositor 中文版 ${TAG#v}"
+            if gh release view "$TAG" >/dev/null 2>&1; then
+              gh release edit "$TAG" --title "$TITLE" --notes-file RELEASE_NOTES.md
+            else
+              gh release create "$TAG" --title "$TITLE" --notes-file RELEASE_NOTES.md --latest
+            fi
+          else
+            # 日常构建：更新 zh-latest 预发布
+            TAG=zh-latest
+            gh release view "$TAG" >/dev/null 2>&1 || \
+              gh release create "$TAG" --prerelease \
+                --title "Compositor 中文版（自动构建）" \
+                --notes "本标签下的 Compositor 中文版由 GitHub Actions 自动构建，每次推送 main 都会更新。正式说明见 RELEASE_NOTES.md。"
           fi
-          # 构建失败时也要能看到日志
+          if ls *.zip >/dev/null 2>&1; then
+            gh release upload "$TAG" *.zip --clobber
+          fi
           if [ "${{ steps.build.outcome }}" != "success" ]; then
-            gh release upload zh-latest build.log --clobber || true
-            echo "构建失败，日志已上传"
+            gh release upload "$TAG" build.log --clobber || true
+            echo "构建失败，日志已上传到 $TAG"
             exit 1
           fi
 
