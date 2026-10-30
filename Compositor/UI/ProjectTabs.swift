@@ -321,7 +321,7 @@ private struct OverflowMenuAnchor: NSViewRepresentable {
             actions = entries.map(\.action)
             let menu = NSMenu()
             for (index, entry) in entries.enumerated() {
-                let item = NSMenuItem(title: entry.title, action: #selector(choose(_:)), keyEquivalent: "")
+                let item = NSMenuItem(title: zhString(entry.title), action: #selector(choose(_:)), keyEquivalent: "")
                 item.target = self
                 item.tag = index
                 menu.addItem(item)

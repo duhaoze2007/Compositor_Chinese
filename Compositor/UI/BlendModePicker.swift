@@ -10,12 +10,16 @@ struct BlendModePicker: NSViewRepresentable {
         // with a line between, so a long list stays readable.
         for (index, group) in LayerBlendMode.groups.enumerated() {
             if index > 0 { button.menu?.addItem(.separator()) }
-            for mode in group { button.addItem(withTitle: mode.rawValue) }
+            for mode in group {
+                button.addItem(withTitle: zhString(mode.rawValue))
+                // 菜单项显示中文，representedObject 记住英文原名，选择时再查回枚举
+                button.lastItem?.representedObject = mode.rawValue
+            }
         }
         button.menu?.delegate = context.coordinator
         button.target = context.coordinator
         button.action = #selector(Coordinator.choose(_:))
-        button.setAccessibilityLabel("Blend mode")
+        button.setAccessibilityLabel(zhString("Blend mode"))
         // A capsule like the SwiftUI buttons and menus (`roundedControls`), which don't reach this AppKit pop-up.
         button.borderShape = .capsule
         return button
@@ -30,13 +34,19 @@ struct BlendModePicker: NSViewRepresentable {
     func updateNSView(_ button: NSPopUpButton, context: Context) {
         button.isEnabled = session.canEditAppearance
         if !context.coordinator.tracking {
-            button.selectItem(withTitle: (session.activeLayer?.blendMode ?? .normal).rawValue)
+            button.selectItem(withTitle: zhString((session.activeLayer?.blendMode ?? .normal).rawValue))
         }
     }
     static func dismantleNSView(_ button: NSPopUpButton, coordinator: Coordinator) {
         if coordinator.tracking { coordinator.session.previewBlendMode(nil, for: nil) }
         button.menu?.delegate = nil
     }
+    /// 菜单项标题是中文，枚举始终从 representedObject 里的英文原名还原。
+    static func mode(of item: NSMenuItem?) -> LayerBlendMode? {
+        guard let raw = item?.representedObject as? String else { return nil }
+        return LayerBlendMode(rawValue: raw)
+    }
+
     final class Coordinator: NSObject, NSMenuDelegate {
         let session: EditorSession
         var tracking = false
@@ -52,7 +62,7 @@ struct BlendModePicker: NSViewRepresentable {
             // AppKit briefly reports no highlighted item while dismissing the menu.
             // Keep the last preview alive until the selection action has committed so
             // the canvas never flashes back to the layer's previous mode.
-            guard let mode = item.flatMap({ LayerBlendMode(rawValue: $0.title) }) else { return }
+            guard let mode = Self.mode(of: item) else { return }
             highlightedMode = mode
             session.previewBlendMode(mode, for: layerID)
         }
@@ -68,9 +78,9 @@ struct BlendModePicker: NSViewRepresentable {
         }
         @objc func choose(_ button: NSPopUpButton) {
             guard session.activeLayerID == layerID,
-                  let mode = highlightedMode ?? button.selectedItem.flatMap({ LayerBlendMode(rawValue: $0.title) }) else { return }
+                  let mode = highlightedMode ?? Self.mode(of: button.selectedItem) else { return }
             session.setLayerBlendMode(mode)
-            button.selectItem(withTitle: mode.rawValue)
+            button.selectItem(withTitle: zhString(mode.rawValue))
             highlightedMode = nil
             session.refreshCanvasPreview?()
         }
